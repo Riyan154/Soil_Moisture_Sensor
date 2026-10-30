@@ -141,6 +141,9 @@ Team Photo:
 
 <img width="1280" height="853" alt="WhatsApp Image 2026-10-30 at 2 03 20 PM" src="https://github.com/user-attachments/assets/68024112-5554-4e2a-a184-3717d16efff6" />
 
+<img width="1280" height="853" alt="WhatsApp Image 2026-10-30 at 2 03 20 PM" src="https://github.com/user-attachments/assets/ec898f68-8aad-44f6-a4ff-78ca2b523ad0" />
+
+
 Demonstration Video:
 
 With my Team:
