@@ -1,214 +1,250 @@
-# 💧 AquaSaver – Smart and Automated Plant Irrigation System
+<div align="center">
 
-An automated irrigation system designed to conserve water through intelligent soil moisture monitoring and sensor-based watering.
+# 💧 AquaSaver
+### Smart & Automated Plant Irrigation System
 
----
+**Every drop matters. Every plant deserves the right amount of water.**
 
-## 🌱 About the Project
+An Arduino-powered prototype that monitors soil moisture, reports environmental conditions, and controls irrigation through a relay-driven water pump.
 
-AquaSaver is a smart irrigation solution developed to reduce water wastage and improve the efficiency of plant watering. The system continuously monitors the moisture levels in the soil using a soil moisture sensor and automatically determines when a plant requires water.
+[![Arduino](https://img.shields.io/badge/Arduino-Uno_R3-00878F?style=for-the-badge&logo=arduino&logoColor=white)](https://www.arduino.cc/)
+![Language](https://img.shields.io/badge/Language-Arduino_C%2B%2B-2563EB?style=for-the-badge)
+![Project](https://img.shields.io/badge/Project-Smart_Irrigation-15803D?style=for-the-badge)
+![Focus](https://img.shields.io/badge/Focus-Water_Conservation-0891B2?style=for-the-badge)
 
-When the soil becomes sufficiently dry, the system activates a water pump through a relay module, supplying water to the plant. Once the soil reaches the required moisture level, the pump automatically stops, preventing unnecessary watering.
+**Monitor soil · Understand conditions · Automate watering · Conserve resources**
 
-In addition to soil moisture monitoring, AquaSaver incorporates a DHT11 sensor to measure the surrounding air temperature and humidity. A 16×2 LCD display provides real-time information about these environmental conditions and the current soil status. Three LEDs provide a simple visual indication of whether the soil is dry, getting dry, or sufficiently moist.
-
-The project also incorporates capacitors and diodes as part of its electronic circuitry to support the operation and protection of the circuit.
-
-By combining automated irrigation, environmental monitoring, and real-time feedback, AquaSaver aims to promote responsible water consumption and provide a foundation for more efficient irrigation systems.
-
----
-
-## 🎯 Objectives
-
-- Conserve Water: Reduce unnecessary water consumption by supplying water only when required.
-- Automate Irrigation: Eliminate the need for continuous manual monitoring and watering.
-- Monitor Soil Conditions: Measure soil moisture levels to determine the watering requirements of plants.
-- Track Environmental Conditions: Monitor surrounding temperature and humidity.
-- Provide Real-Time Feedback: Display sensor readings and soil conditions through an LCD and LED indicators.
-- Promote Sustainability: Encourage efficient water management through affordable automation.
+</div>
 
 ---
 
-## ⚙️ How It Works
+## 🌱 The idea
 
-AquaSaver operates through a continuous cycle of soil monitoring and automated irrigation.
+Traditional watering often relies on fixed schedules or guesswork. But plants do not always need water at the same time: their needs change with soil conditions and the surrounding environment.
 
-1. Soil Monitoring: The soil moisture sensor measures the moisture level present in the soil and sends the readings to the Arduino Uno.
+**AquaSaver** explores a more responsive approach. An **Arduino Uno R3** reads a soil-moisture sensor, assigns the soil to one of three moisture states, displays feedback on a **16×2 LCD**, lights a matching **LED**, and sends a control signal to a **relay-connected 5V pump**. A **DHT11** also provides ambient temperature and humidity readings.
 
-2. Data Processing: The Arduino processes the readings and categorises the soil condition into three states: Dry, Getting Dry, and Moist.
+The goal is simple: **water when the soil needs it, rather than watering unnecessarily.**
 
-3. Automatic Watering: When the soil becomes sufficiently dry, the Arduino activates the relay module, which switches on the water pump.
+> AquaSaver is an educational working prototype, not a certified irrigation controller. Its readings and thresholds must be calibrated for the actual soil, plant, sensor, and hardware.
 
-4. Moisture Regulation: As the soil receives water and reaches the required moisture threshold, the system switches off the pump.
+## ✨ What makes AquaSaver useful?
 
-5. Environmental Monitoring: The DHT11 sensor measures the surrounding temperature and humidity.
+| Capability | What it does |
+| :--- | :--- |
+| 💧 **Soil monitoring** | Converts analog sensor readings into an estimated moisture percentage |
+| 🚦 **Clear visual status** | Uses green, yellow, and red LEDs to indicate soil condition |
+| 🚿 **Pump control** | Uses an Arduino-controlled relay to switch a small water pump |
+| 🌡️ **Environment sensing** | Displays ambient temperature and relative humidity from a DHT11 |
+| 📟 **Instant feedback** | Shows soil status and environmental readings on a 16×2 LCD |
+| 📈 **Serial diagnostics** | Reports sensor status and readings through the Arduino Serial Monitor |
+| 🧠 **Reading stabilization** | Averages sensor samples and waits for consistent state readings |
 
-6. Output Display: The LCD displays the soil condition, temperature, and humidity, while the LEDs indicate the current soil moisture status.
+## ⚙️ How the system is designed to work
 
----
+```text
+           ┌───────────────────┐
+           │ Soil moisture     │
+           │ sensor (A0)       │
+           └─────────┬─────────┘
+                     │
+                     v
+           ┌───────────────────┐
+           │ Arduino Uno R3    │<──── DHT11 (D7)
+           │                   │
+           │ • Read sensors    │
+           │ • Estimate %      │
+           │ • Classify soil   │
+           └─────────┬─────────┘
+                     │
+          ┌──────────┼───────────┐
+          v          v           v
+      LEDs       16×2 LCD     Relay (D13)
+   Red/Yellow/   Soil status      │
+      Green      Temp/Humidity    v
+                              5V water pump
+```
 
-## 🔧 Components Used
+**Intended operating cycle:**
+
+1. **Measure:** The moisture probe reads the soil and sends an analog value to the Arduino.
+2. **Smooth:** The program averages five samples to reduce short-term noise.
+3. **Classify:** The estimated moisture percentage determines whether the soil is dry, getting dry, or moist.
+4. **Indicate:** An LED and LCD communicate the current state.
+5. **Water:** The intended controller turns the pump on for dry soil and off when adequate moisture is restored.
+6. **Repeat:** The Arduino continuously checks the environment and updates the outputs.
+
+**Important implementation note:** The checked-in sketch currently has a **relay polarity mismatch**. The comment identifies the relay as active-low, but `controlPump()` writes `HIGH` in the dry state and `LOW` otherwise. For an active-low relay, those commands produce the **opposite** of the intended behavior. See [Known limitations](#-known-limitations) before connecting or operating the pump. This README does not modify the sketch.
+
+## 🚦 Soil moisture states
+
+These are the **actual thresholds in the current Arduino code**, using its calibrated estimate of moisture percentage:
+
+| Condition | Estimated soil moisture | Indicator | Intended pump behavior |
+| --- | ---: | :---: | --- |
+| **Dry** | Below 69% | 🔴 Red | Water the plant |
+| **Getting dry** | 69% to below 85% | 🟡 Yellow | Pump off |
+| **Moist** | 85% or higher | 🟢 Green | Pump off |
+
+The percentages depend on sensor calibration and should **not** be interpreted as universal agricultural soil-moisture measurements.
+
+### Calibration used in the sketch
+
+```cpp
+int moisturePercent = map(soilValue, 1023, 250, 0, 100);
+moisturePercent = constrain(moisturePercent, 0, 100);
+```
+
+| Reading | Calibration meaning |
+| --- | --- |
+| **1023** | Dry-end reference (mapped to 0%) |
+| **250** | Wet-end reference (mapped to 100%) |
+| **85%** | Green-state threshold |
+| **69%** | Yellow-state threshold |
+
+The program requires **two consecutive readings** supporting a new moisture state before changing the current state. Each reading is itself an average of five analog measurements.
+
+## 🧰 Hardware components
 
 | Component | Purpose |
-|---|---|
-| Arduino Uno R3 | Main microcontroller that processes sensor readings and controls the system |
-| Soil Moisture Sensor | Measures the moisture content of the soil |
-| DHT11 Sensor | Measures surrounding temperature and humidity |
-| Relay Module | Controls the water pump |
-| 5V Water Pump | Supplies water to the plant |
-| 16×2 LCD Display | Displays soil status, temperature, and humidity |
-| Green LED | Indicates sufficiently moist soil |
-| Yellow LED | Indicates soil that is getting dry |
-| Red LED | Indicates dry soil |
-| Resistors | Limit current and help protect electronic components |
-| Capacitors | Help stabilise the power supply and reduce electrical noise |
-| Diodes | Provide electrical protection depending on their circuit placement |
-| Breadboard | Provides connections between components |
-| Jumper Wires | Establish electrical connections |
+| --- | --- |
+| **Arduino Uno R3** | Processes the sensor readings and controls outputs |
+| **Analog soil moisture sensor** | Estimates soil wetness |
+| **DHT11 sensor** | Measures ambient temperature and humidity |
+| **16×2 LCD display** | Displays soil condition, temperature, and humidity |
+| **5V water pump** | Delivers water to the plant |
+| **Relay module** | Switches the pump circuit |
+| **Green, yellow, and red LEDs** | Show the current soil condition |
+| **Current-limiting resistors** | Protect the LEDs |
+| **Breadboard and jumper wires** | Provide prototype connections |
+| **External 5V pump supply / breadboard power module** | Provides a separate source of power for the pump |
+| **Flyback diode** | Helps suppress motor-switching voltage transients |
+| **Decoupling / bulk capacitors** | Help reduce electrical noise and supply dips |
+
+The prototype uses low-voltage electronics. Pump power requirements must be checked against the external supply's current capability; a breadboard power module should not be assumed to support every pump. Keep the electronics protected from water and do not power the pump directly from an Arduino output pin.
+
+## 🔌 Arduino pin reference
+
+The following assignments are taken directly from `SoilMoistureSensor.ino`.
+
+| Part | Arduino connection |
+| --- | --- |
+| Soil moisture sensor (analog output) | **A0** |
+| DHT11 data | **D7** |
+| Green LED | **D8** |
+| Yellow LED | **D9** |
+| Red LED | **D10** |
+| Relay signal | **D13** |
+| LCD RS | **D12** |
+| LCD Enable | **D11** |
+| LCD D4 | **D5** |
+| LCD D5 | **D4** |
+| LCD D6 | **D3** |
+| LCD D7 | **D2** |
+
+**Power and grounding:** Use correct power rails for each component and a suitable pump supply. Logic-side grounds must be referenced appropriately for the relay input. Follow the specific relay, sensor, and power module documentation rather than assuming their terminals behave identically.
+
+## 💻 Software and libraries
+
+- **Language:** Arduino C++
+- **Board:** Arduino Uno R3
+- **Editor:** Arduino IDE
+- **Libraries:** `DHT.h` (DHT sensor library) and `LiquidCrystal.h` (LCD interface)
+- **Monitoring:** Arduino Serial Monitor at **9600 baud**
+
+**Source file:** [`SoilMoistureSensor.ino`](SoilMoistureSensor.ino)
+
+## 🚀 Getting started
+
+1. **Clone or download** this repository.
+   ```bash
+   git clone https://github.com/Riyan154/Soil_Moisture_Sensor.git
+   ```
+2. **Open** `SoilMoistureSensor.ino` in the Arduino IDE.
+3. **Install** the Adafruit DHT sensor library and its required dependencies through Library Manager if they are not already installed. The standard `LiquidCrystal` library is also required.
+4. **Select** the correct Arduino Uno board and USB port.
+5. **Inspect and correct the relay logic for your actual relay module before operating the pump.** The checked-in code contains the mismatch described above.
+6. **Connect** your components according to the pin reference, checking supply polarity, current ratings, and water isolation.
+7. **Upload** the sketch and open Serial Monitor at **9600 baud**.
+8. **Calibrate** the moisture readings for your sensor and growing medium, then test each state before leaving the system running.
+
+> ⚠️ **Safety:** Disconnect power before changing wiring. Use a suitable low-voltage external pump supply, account for motor back-EMF, and keep water away from exposed electrical connections. This prototype does not implement a water-level cutoff or a maximum pump-runtime failsafe.
+
+## 📟 What you will see
+
+### LCD display
+
+The first LCD row shows the soil condition. The second row shows ambient temperature and humidity.
+
+```text
+Soil:MOIST
+T:25C H:60%
+```
+
+*Illustrative display format; the actual readings depend on your environment and sensor.*
+
+### Serial Monitor
+
+The sketch also prints the soil state and temperature/humidity data through the serial connection. When the DHT11 fails to provide valid readings, it displays a **DHT11 read error** instead of fabricated values.
+
+## 🔬 Engineering decisions
+
+**Why average readings?** Analog soil sensors can fluctuate. Taking five samples helps smooth brief disturbances and improves the stability of the displayed value.
+
+**Why wait for consistent states?** Requiring two consistent classifications helps prevent rapid LED and pump-state changes at a threshold boundary, although it is not a full hysteresis controller.
+
+**Why use a relay?** The microcontroller can control a separate pump circuit without attempting to supply motor current through a digital I/O pin.
+
+**Why use a separate pump supply and protective components?** Small motors can generate electrical noise and supply disturbances that interfere with LCDs and microcontrollers. Proper separation, protection, and decoupling improve reliability.
+
+## 🌍 Impact and practical value
+
+AquaSaver demonstrates the concept of **sensor-based irrigation**: respond to measured conditions rather than watering on a fixed timetable. With careful calibration, appropriate safeguards, and field testing, this approach has the potential to reduce unnecessary watering and manual monitoring.
+
+The current prototype does **not** measure actual water savings or guarantee optimum plant health. Those outcomes would need comparison trials, water-flow measurements, and crop-specific calibration.
+
+## 🧩 Known limitations
+
+| Limitation | What needs improvement |
+| --- | --- |
+| **Relay polarity mismatch in the current sketch** | Match the pump-control outputs to the relay's real active level; verify dry = ON and moist = OFF |
+| **Single-point soil measurement** | Add multiple calibrated sensors for different beds or zones |
+| **Raw moisture percentage is sensor-specific** | Calibrate in the target soil instead of assuming the same dry/wet values everywhere |
+| **Fixed moisture thresholds** | Tune thresholds for different plants, soils, and conditions |
+| **No maximum pump-run safeguard** | Add timeout, dry-run / tank-level protection, and fault handling |
+| **No measured water-consumption feedback** | Add a flow sensor to quantify delivery and water savings |
+| **Potential corrosion in some soil probes** | Consider more durable capacitive probes for long-term deployment |
+| **Prototype wiring and pump interference** | Use reliable connectors, protected enclosures, stable supplies, and appropriate motor suppression |
+
+## 🔭 Future possibilities
+
+- **Multi-zone irrigation:** Monitor several plants or garden sections independently.
+- **Flow and tank monitoring:** Measure water delivered and detect low-water conditions.
+- **Smarter control:** Introduce hysteresis, maximum run time, sensor-fault handling, and per-plant settings.
+- **Remote monitoring:** Add Wi-Fi connectivity and an optional dashboard for alerts and trends.
+- **Energy-conscious operation:** Evaluate a properly sized battery or solar-powered supply.
+- **Long-term data analysis:** Track moisture, pump activity, and actual water consumption over time.
+
+## 👥 Project team
+
+**AquaSaver** is a collaborative Arduino and sustainability project.
+
+**Team members:** Riyan · Reyhan · Basim · Blesson · Rehan
+
+**Project areas:** Robotics, embedded systems, environmental monitoring, and water conservation.
+
+## 🤝 Acknowledgements
+
+This project brought together programming, electronics, prototyping, sensor calibration, and teamwork to explore an everyday environmental challenge. AquaSaver shows how accessible components can become a foundation for practical, responsible automation.
 
 ---
 
-## 💻 Technologies Used
+<div align="center">
 
-- Programming Language: C++ (Arduino)
-- Microcontroller: Arduino Uno R3
-- Development Environment: Arduino IDE
-- Libraries: DHT Sensor Library and LiquidCrystal Library
+### 💧 Smarter watering starts with better information.
 
----
+**AquaSaver — Monitor wisely. Water responsibly.**
 
-## 📟 System Features
+[**Explore the Arduino code**](SoilMoistureSensor.ino) · [**Back to repository**](https://github.com/Riyan154/Soil_Moisture_Sensor)
 
-### 1. Automated Irrigation
-
-The system automatically activates the water pump when the soil moisture falls below the defined dry-soil threshold. It stops watering when the required moisture condition is reached.
-
-### 2. Three-Level Soil Monitoring
-
-The system classifies soil conditions into three categories:
-
-- 🔴 Dry: The soil requires watering.
-- 🟡 Getting Dry: The soil moisture is approaching the watering threshold.
-- 🟢 Moist: The soil has sufficient moisture, and watering is stopped.
-
-### 3. Temperature and Humidity Monitoring
-
-The DHT11 sensor continuously measures the surrounding air temperature and relative humidity, providing additional environmental information.
-
-### 4. LCD Monitoring
-
-A 16×2 LCD displays the current soil condition on the first row and temperature and humidity readings on the second row.
-
-### 5. Stable Sensor Readings
-
-The system averages multiple soil sensor readings and requires consistent readings before changing the soil status. This helps reduce sudden fluctuations caused by inconsistent sensor measurements.
-
----
-
-## 📸 Project Gallery
-
-### Project Setup
-
-Add photographs of the complete AquaSaver prototype, including the Arduino, sensors, LCD, relay module, capacitors, diodes, and water pump.
-
-<!-- Add your project setup photograph here -->
-
-### Hardware Components
-
-Add individual photographs showing the main hardware components and their connections.
-
-<!-- Add your hardware photographs here -->
-
-### LCD Display
-
-Show the LCD displaying the soil moisture condition, temperature, and humidity.
-
-<!-- Add your LCD photographs here -->
-
-### Automatic Watering Demonstration
-
-Show the water pump operating when the soil moisture reaches the dry threshold.
-
-<!-- Add your water pump photographs here -->
-
----
-
-## 🎥 Project Demonstration
-
-Add a video demonstrating the complete working of AquaSaver.
-
-Team Photo:
-
-<img width="1280" height="853" alt="WhatsApp Image 2026-10-30 at 2 03 20 PM" src="https://github.com/user-attachments/assets/68024112-5554-4e2a-a184-3717d16efff6" />
-<img width="1280" height="853" alt="image" src="https://github.com/user-attachments/assets/2f5734bc-421c-4d90-8b2c-ee377ab3bd6a" />
-
-Demonstration Video:
-
-With my Team:
-
-https://github.com/user-attachments/assets/d28bb64f-6d02-4b3b-9898-f2b034407e31
-
-https://github.com/user-attachments/assets/8c0dddb1-938f-49a5-9477-9e4798f1826a
-
-Model Photos:
-
-<img width="1280" height="853" alt="WhatsApp Image 2026-10-30 at 2 03 20 PM (2)" src="https://github.com/user-attachments/assets/c07df15f-3acd-44cd-aa2a-a03109af09c0" />
-<img width="1280" height="853" alt="WhatsApp Image 2026-10-30 at 2 03 20 PM (1)" src="https://github.com/user-attachments/assets/e723743c-84bd-4bc1-859c-8ab0d17c1e0c" />
-
-
-
-
-The demonstration should showcase:
-
-- Soil moisture sensor readings.
-- LED indicators changing according to soil conditions.
-- Automatic activation of the water pump.
-- Pump stopping when the required moisture level is reached.
-- LCD temperature and humidity readings.
-
----
-
-## 🔮 Future Improvements
-
-Although AquaSaver currently operates as an automated plant irrigation prototype, several improvements could expand its capabilities:
-
-- Multiple Soil Sensors: Integrate additional moisture sensors to monitor different areas of a garden or agricultural field.
-- Larger-Scale Irrigation: Extend the system to support multiple plants and irrigation zones.
-- Water Flow Monitoring: Incorporate a flow sensor to measure the quantity of water supplied to plants.
-- Wireless Monitoring: Introduce Wi-Fi connectivity to monitor soil conditions remotely through a mobile application or web dashboard.
-- Water Usage Analysis: Record water consumption data to analyse irrigation patterns and identify opportunities for further conservation.
-- Solar Power Integration: Explore solar energy as an alternative power source to improve energy efficiency.
-
----
-
-## 🌍 Environmental Impact
-
-Water is an essential resource, and inefficient irrigation can lead to unnecessary water consumption. AquaSaver addresses this issue by introducing automation into the plant watering process.
-
-Instead of watering plants according to a fixed schedule, the system makes watering decisions based on actual soil moisture readings. This approach can help reduce unnecessary irrigation, minimise manual effort, and encourage more responsible water management.
-
-The project's underlying concept can be further developed and adapted for gardens, green spaces, and agricultural applications.
-
----
-
-## 👥 Project Information
-
-Project Name: AquaSaver
-
-Category: Robotics, Embedded Systems and Smart Irrigation
-
-Microcontroller: Arduino Uno R3
-
-Primary Objective: Water Conservation and Automated Irrigation
-
-Project Type: Group Project
-
-Developer: Riyan, Reyhan, Basim, Blesson and Rehan
-
----
-
-## ⭐ Acknowledgements
-
-AquaSaver was developed as a collaborative group project exploring Arduino-based automation, sensor integration, and sustainable water management.
-
-Through teamwork, experimentation, and practical implementation, we combined hardware and software to demonstrate how accessible technology can contribute to solving everyday environmental challenges.
+</div>
