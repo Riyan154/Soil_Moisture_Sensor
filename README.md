@@ -225,13 +225,6 @@ The current prototype does **not** measure actual water savings or guarantee opt
 - **Energy-conscious operation:** Evaluate a properly sized battery or solar-powered supply.
 - **Long-term data analysis:** Track moisture, pump activity, and actual water consumption over time.
 
-## 👥 Project team
-
-**AquaSaver** is a collaborative Arduino and sustainability project.
-
-**Team members:** Riyan · Reyhan · Basim · Blesson · Rehan
-
-**Project areas:** Robotics, embedded systems, environmental monitoring, and water conservation.
 
 ## 🤝 Acknowledgements
 
